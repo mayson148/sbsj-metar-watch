@@ -1,0 +1,50 @@
+
+name: Build SBSJ METAR APK
+
+on:
+  push:
+    paths:
+      - 'SBSJMetarComplication.zip'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get source files
+        uses: actions/checkout@v6
+
+      - name: Unpack Android project
+        run: unzip -q SBSJMetarComplication.zip -d .
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android platform and build tools
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Build debug APK
+        run: gradle --no-daemon -p SBSJMetarComplication :app:assembleDebug
+
+      - name: Publish APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SBSJ-METAR-debug-APK
+          path: SBSJMetarComplication/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
