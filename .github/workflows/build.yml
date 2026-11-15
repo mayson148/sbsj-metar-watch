@@ -4,7 +4,7 @@ name: Build SBSJ METAR APK
 on:
   push:
     paths:
-      - 'SBSJMetarComplication.zip'
+      - 'SBSJMetarMobileBuild.zip'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -14,12 +14,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Get source files
         uses: actions/checkout@v6
 
-      - name: Unpack Android project
-        run: unzip -q SBSJMetarComplication.zip -d .
+      - name: Extract mobile package
+        run: unzip -q SBSJMetarMobileBuild.zip -d .
+
+      - name: Extract Android project
+        run: |
+          unzip -q SBSJMetarMobileBuild/SBSJMetarComplication.zip -d .
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -30,7 +35,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Install Android platform and build tools
+      - name: Install Android SDK packages
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
 
       - name: Set up Gradle
@@ -38,10 +43,10 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Build debug APK
+      - name: Build APK
         run: gradle --no-daemon -p SBSJMetarComplication :app:assembleDebug
 
-      - name: Publish APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SBSJ-METAR-debug-APK
